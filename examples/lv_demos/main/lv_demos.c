@@ -42,33 +42,40 @@
 #include "lv_port.h"
 #include "lvgl.h"
 
+#include "ui.h"
+#include "ui_helpers.h"
+
 #define GATTC_TAG             "SEC_GATTC_DEMO"
-#define REMOTE_SERVICE_UUID   0x00FF
-#define REMOTE_NOTIFY_UUID    0xFF01
-#define EXT_SCAN_DURATION     0
-#define EXT_SCAN_PERIOD       0
+#define REMOTE_SERVICE_UUID   0x00FF	//RG: CONTAINS THE SERVICE THE CLIENT IS INTERESTED IN
+#define REMOTE_NOTIFY_UUID    0xFF01	//RG: NOTIFICATION UUID ONCE THE WRITTING PROCESS IS COMPLETE
+#define EXT_SCAN_DURATION     0		//RG: DURATION OF THE CLIENT TRYING TO FIND THE SERVER
+#define EXT_SCAN_PERIOD       0	//RG: PERIOD OF TIME THE CLIENT SCANS LOOKING FOR THE SERVER
 
 
-static esp_gattc_char_elem_t *char_elem_result   = NULL;
-static esp_gattc_descr_elem_t *descr_elem_result = NULL;
+static esp_gattc_char_elem_t *char_elem_result   = NULL;//RG: DATA VALUE FROM THE PROFILE CHARACTERISTIC
+static esp_gattc_descr_elem_t *descr_elem_result = NULL;//RG: DATA VALUE FROM THE PROFILE DESCRIPTION
+
 
 ///Declare static functions
-void lv_demo_hud(void);
-static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
-static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
+void lv_demo_hud(char str[]);	//RG:FUNCTION TO SIMULATE THE HUD
+static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);	//RG:GAP LAYER METHOD (SCAN)
+static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param); //RG:GATT LAYER METHOD CLIENT
+static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param); //RG: PROFILE DATA HANDLER
 
 
-static esp_bt_uuid_t remote_filter_service_uuid = {
+static esp_bt_uuid_t remote_filter_service_uuid = {//RG: REMOTE FILTER SERVICE (USED TO FIND THE SERVICE IN THE SERVER)
     .len = ESP_UUID_LEN_16,
-    .uuid = {.uuid16 = REMOTE_SERVICE_UUID,},
+    .uuid =
+    {
+    	.uuid16 = REMOTE_SERVICE_UUID, //RG: FIND THE SERVICE WITH THE SPECIFIC UUID IN THE SERVER
+    },
 };
 
-static bool connect = false;
-static bool get_service = false;
-static const char remote_device_name[] = "ESP_BLE50_SERVER";
+static bool connect = false;		//RG: FLAG TO VALIDATE IF SERVER-CLIENT CONNECTION HAS BEEN STABLISHED
+static bool get_service = false;	//RG: FLAG TO VALIDATE IF THE SERVICE HAS BEEN GOTTEN ALREADY FROM THE CLIENT
+static const char remote_device_name[] = "ESP_BLE50_SERVER";//RG: NAME OF THE SERVER THE SYSTEM WILL BE LOOKING FOR
 
-static esp_ble_ext_scan_params_t ext_scan_params = {
+static esp_ble_ext_scan_params_t ext_scan_params = {	//RG: LIST OF PROPERTIES TO SCAN SERVERS
     .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
     .filter_policy = BLE_SCAN_FILTER_ALLOW_ALL,
     .scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE,
@@ -136,33 +143,43 @@ static const char *esp_key_type_to_str(esp_ble_key_type_t key_type)
    const char *key_str = NULL;
    switch(key_type) {
     case ESP_LE_KEY_NONE:
+        printf("Key Type ESP_LE_KEY_NONE\n");
         key_str = "ESP_LE_KEY_NONE";
         break;
     case ESP_LE_KEY_PENC:
+        printf("Key Type ESP_LE_KEY_PENC\n");
         key_str = "ESP_LE_KEY_PENC";
         break;
     case ESP_LE_KEY_PID:
+        printf("Key Type ESP_LE_KEY_PID\n");
         key_str = "ESP_LE_KEY_PID";
         break;
     case ESP_LE_KEY_PCSRK:
+        printf("Key Type ESP_LE_KEY_PCSRK\n");
         key_str = "ESP_LE_KEY_PCSRK";
         break;
     case ESP_LE_KEY_PLK:
+        printf("Key Type ESP_LE_KEY_PLK\n");
         key_str = "ESP_LE_KEY_PLK";
         break;
     case ESP_LE_KEY_LLK:
+        printf("Key Type ESP_LE_KEY_LLK\n");
         key_str = "ESP_LE_KEY_LLK";
         break;
     case ESP_LE_KEY_LENC:
+        printf("Key Type ESP_LE_KEY_LENC\n");
         key_str = "ESP_LE_KEY_LENC";
         break;
     case ESP_LE_KEY_LID:
+        printf("Key Type ESP_LE_KEY_LID\n");
         key_str = "ESP_LE_KEY_LID";
         break;
     case ESP_LE_KEY_LCSRK:
+        printf("Key Type ESP_LE_KEY_LCSRK\n");
         key_str = "ESP_LE_KEY_LCSRK";
         break;
     default:
+        printf("Key Type INVALID BLE KEY TYPE\n");
         key_str = "INVALID BLE KEY TYPE";
         break;
 
@@ -175,30 +192,39 @@ static char *esp_auth_req_to_str(esp_ble_auth_req_t auth_req)
    char *auth_str = NULL;
    switch(auth_req) {
     case ESP_LE_AUTH_NO_BOND:
+        printf("Auth req ESP_LE_AUTH_NO_BOND\n");
         auth_str = "ESP_LE_AUTH_NO_BOND";
         break;
     case ESP_LE_AUTH_BOND:
+        printf("Auth req ESP_LE_AUTH_BOND\n");
         auth_str = "ESP_LE_AUTH_BOND";
         break;
     case ESP_LE_AUTH_REQ_MITM:
+        printf("Auth req ESP_LE_AUTH_REQ_MITM\n");
         auth_str = "ESP_LE_AUTH_REQ_MITM";
         break;
     case ESP_LE_AUTH_REQ_BOND_MITM:
+        printf("Auth req ESP_LE_AUTH_REQ_BOND_MITM\n");
         auth_str = "ESP_LE_AUTH_REQ_BOND_MITM";
         break;
     case ESP_LE_AUTH_REQ_SC_ONLY:
+        printf("Auth req ESP_LE_AUTH_REQ_SC_ONLY\n");
         auth_str = "ESP_LE_AUTH_REQ_SC_ONLY";
         break;
     case ESP_LE_AUTH_REQ_SC_BOND:
+        printf("Auth req ESP_LE_AUTH_REQ_SC_BOND\n");
         auth_str = "ESP_LE_AUTH_REQ_SC_BOND";
         break;
     case ESP_LE_AUTH_REQ_SC_MITM:
+        printf("Auth req ESP_LE_AUTH_REQ_SC_MITM\n");
         auth_str = "ESP_LE_AUTH_REQ_SC_MITM";
         break;
     case ESP_LE_AUTH_REQ_SC_MITM_BOND:
+        printf("Auth req ESP_LE_AUTH_REQ_SC_MITM_BOND\n");
         auth_str = "ESP_LE_AUTH_REQ_SC_MITM_BOND";
         break;
     default:
+        printf("Auth req INVALID BLE AUTH REQ\n");
         auth_str = "INVALID BLE AUTH REQ";
         break;
    }
@@ -212,46 +238,53 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     switch (event) {
     case ESP_GATTC_REG_EVT:
-        ESP_LOGI(GATTC_TAG, "REG_EVT");
+        printf("gattc_profile_event_handler ESP_GATTC_REG_EVT\n");
+        //--->ESP_LOGI(GATTC_TAG, "REG_EVT");
         esp_ble_gap_config_local_privacy(true);
         break;
     case ESP_GATTC_CONNECT_EVT:
-        ESP_LOGI(GATTC_TAG, "ESP_GATTC_CONNECT_EVT");
+        printf("gattc_profile_event_handler ESP_GATTC_CONNECT_EVT\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_CONNECT_EVT");
         break;
     case ESP_GATTC_OPEN_EVT:
         if (param->open.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "open failed, error status = %x", p_data->open.status);
+            printf("gattc_profile_event_handler ESP_GATTC_OPEN_EVT\n");
+            //--->ESP_LOGE(GATTC_TAG, "open failed, error status = %x", p_data->open.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "open success");
+        //--->ESP_LOGI(GATTC_TAG, "open success");
         gl_profile_tab[PROFILE_A_APP_ID].conn_id = p_data->open.conn_id;
         memcpy(gl_profile_tab[PROFILE_A_APP_ID].remote_bda, p_data->open.remote_bda, sizeof(esp_bd_addr_t));
-        ESP_LOGI(GATTC_TAG, "REMOTE BDA:");
+        printf("-gattc_profile_event_handler Remote BDA = \n");
+        //--->ESP_LOGI(GATTC_TAG, "REMOTE BDA:");
+        //lv_demo_hud("BDA Value");
         esp_log_buffer_hex(GATTC_TAG, gl_profile_tab[PROFILE_A_APP_ID].remote_bda, sizeof(esp_bd_addr_t));
         esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->open.conn_id);
         if (mtu_ret){
-            ESP_LOGE(GATTC_TAG, "config MTU error, error code = %x", mtu_ret);
+            printf("-gattc_profile_event_handler Error MTU\n");ESP_LOGE(GATTC_TAG, "config MTU error, error code = %x", mtu_ret);
         }
         break;
     case ESP_GATTC_CFG_MTU_EVT:
         if (param->cfg_mtu.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG,"config mtu failed, error status = %x", param->cfg_mtu.status);
+            printf("-gattc_profile_event_handler ESP_GATTC_CFG_MTU_EVT");ESP_LOGE(GATTC_TAG,"config mtu failed, error status = %x", param->cfg_mtu.status);
         }
-        ESP_LOGI(GATTC_TAG, "ESP_GATTC_CFG_MTU_EVT, Status %d, MTU %d, conn_id %d", param->cfg_mtu.status, param->cfg_mtu.mtu, param->cfg_mtu.conn_id);
+        printf("-gattc_profile_event_handler ESP_GATTC_CFG_MTU_EVT Status %d, MTU %d, conn_id %d", param->cfg_mtu.status, param->cfg_mtu.mtu, param->cfg_mtu.conn_id);
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_CFG_MTU_EVT, Status %d, MTU %d, conn_id %d", param->cfg_mtu.status, param->cfg_mtu.mtu, param->cfg_mtu.conn_id);
         break;
     case ESP_GATTC_DIS_SRVC_CMPL_EVT:
         if (param->dis_srvc_cmpl.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "discover service failed, status %d", param->dis_srvc_cmpl.status);
+            printf("-gattc_profile_event_handler ESP_GATTC_DIS_SRVC_CMPL_EVT");ESP_LOGE(GATTC_TAG, "discover service failed, status %d", param->dis_srvc_cmpl.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "discover service complete conn_id %d", param->dis_srvc_cmpl.conn_id);
+        printf("-gattc_profile_event_handler ESP_GATTC_DIS_SRVC_CMPL_EVT Discover complete [Next calling search service]");ESP_LOGI(GATTC_TAG, "discover service complete conn_id %d", param->dis_srvc_cmpl.conn_id);
         esp_ble_gattc_search_service(gattc_if, param->cfg_mtu.conn_id, &remote_filter_service_uuid);
         break;
     case ESP_GATTC_SEARCH_RES_EVT: {
-        ESP_LOGI(GATTC_TAG, "SEARCH RES: conn_id = %x is primary service %d", p_data->search_res.conn_id, p_data->search_res.is_primary);
-        ESP_LOGI(GATTC_TAG, "start handle %d end handle %d current handle value %d", p_data->search_res.start_handle, p_data->search_res.end_handle, p_data->search_res.srvc_id.inst_id);
+        printf("-gattc_profile_event_handler ESP_GATTC_SEARCH_RES_EVT SEARCH RES: conn_id = %x is primary service %d", p_data->search_res.conn_id, p_data->search_res.is_primary);ESP_LOGI(GATTC_TAG, "SEARCH RES: conn_id = %x is primary service %d", p_data->search_res.conn_id, p_data->search_res.is_primary);
+        printf("-gattc_profile_event_handler ESP_GATTC_SEARCH_RES_EVT start handle %d end handle %d current handle value %d", p_data->search_res.start_handle, p_data->search_res.end_handle, p_data->search_res.srvc_id.inst_id);ESP_LOGI(GATTC_TAG, "start handle %d end handle %d current handle value %d", p_data->search_res.start_handle, p_data->search_res.end_handle, p_data->search_res.srvc_id.inst_id);
         if (p_data->search_res.srvc_id.uuid.len == ESP_UUID_LEN_16 && p_data->search_res.srvc_id.uuid.uuid.uuid16 == REMOTE_SERVICE_UUID) {
-            ESP_LOGI(GATTC_TAG, "UUID16: %x", p_data->search_res.srvc_id.uuid.uuid.uuid16);
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "UUID16: %x", p_data->search_res.srvc_id.uuid.uuid.uuid16);
             get_service = true;
             gl_profile_tab[PROFILE_A_APP_ID].service_start_handle = p_data->search_res.start_handle;
             gl_profile_tab[PROFILE_A_APP_ID].service_end_handle = p_data->search_res.end_handle;
@@ -260,15 +293,19 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     }
     case ESP_GATTC_SEARCH_CMPL_EVT:
         if (p_data->search_cmpl.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "search service failed, error status = %x", p_data->search_cmpl.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "search service failed, error status = %x", p_data->search_cmpl.status);
             break;
         }
         if(p_data->search_cmpl.searched_service_source == ESP_GATT_SERVICE_FROM_REMOTE_DEVICE) {
-            ESP_LOGI(GATTC_TAG, "Get service information from remote device");
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "Get service information from remote device");
         } else if (p_data->search_cmpl.searched_service_source == ESP_GATT_SERVICE_FROM_NVS_FLASH) {
-            ESP_LOGI(GATTC_TAG, "Get service information from flash");
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "Get service information from flash");
         } else {
-            ESP_LOGI(GATTC_TAG, "unknown service source");
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "unknown service source");
         }
         if (get_service){
             uint16_t count  = 0;
@@ -281,12 +318,13 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                                         INVALID_HANDLE,
                                                                         &count);
             if (ret_status != ESP_GATT_OK){
-                ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_attr_count error, %d", __LINE__);
+                printf("-\n");
+                //--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_attr_count error, %d", __LINE__);
             }
             if (count > 0){
                 char_elem_result = (esp_gattc_char_elem_t *)malloc(sizeof(esp_gattc_char_elem_t) * count);
                 if (!char_elem_result){
-                    ESP_LOGE(GATTC_TAG, "gattc no mem");
+                    printf("-\n");ESP_LOGE(GATTC_TAG, "gattc no mem");
                 }else{
                     ret_status = esp_ble_gattc_get_all_char(gattc_if,
                                                             gl_profile_tab[PROFILE_A_APP_ID].conn_id,
@@ -296,7 +334,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                             &count,
                                                             offset);
                     if (ret_status != ESP_GATT_OK){
-                        ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_char error, %d", __LINE__);
+                        printf("-\n");
+                        //--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_char error, %d", __LINE__);
                     }
                     if (count > 0){
 
@@ -320,7 +359,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         break;
     case ESP_GATTC_REG_FOR_NOTIFY_EVT: {
         if (p_data->reg_for_notify.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "reg for notify failed, error status = %x", p_data->reg_for_notify.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "reg for notify failed, error status = %x", p_data->reg_for_notify.status);
             break;
         }
 
@@ -335,12 +375,14 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                                         p_data->reg_for_notify.handle,
                                                                         &count);
             if (ret_status != ESP_GATT_OK){
-                ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_attr_count error, %d", __LINE__);
+                printf("-\n");
+                //--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_attr_count error, %d", __LINE__);
             }
             if (count > 0){
                 descr_elem_result = malloc(sizeof(esp_gattc_descr_elem_t) * count);
                 if (!descr_elem_result){
-                    ESP_LOGE(GATTC_TAG, "malloc error, gattc no mem");
+                    printf("-ESP_GATTC_REG_FOR_NOTIFY_EVT");
+                    //--->ESP_LOGE(GATTC_TAG, "malloc error, gattc no mem");
                 }else{
                     ret_status = esp_ble_gattc_get_all_descr(gattc_if,
                                                              gl_profile_tab[PROFILE_A_APP_ID].conn_id,
@@ -349,7 +391,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                              &count,
                                                              offset);
                 if (ret_status != ESP_GATT_OK){
-                    ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_descr error, %d", __LINE__);
+                    printf("-ERROR: ESP_GATTC_REG_FOR_NOTIFY_EVT");
+                    //--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_descr error, %d", __LINE__);
                 }
 
                     for (int i = 0; i < count; ++i)
@@ -374,32 +417,38 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         break;
     }
     case ESP_GATTC_NOTIFY_EVT:
-        ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
+        printf("-ESP_GATTC_NOTIFY_EVT");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
         esp_log_buffer_hex(GATTC_TAG, p_data->notify.value, p_data->notify.value_len);
         break;
     case ESP_GATTC_WRITE_DESCR_EVT:
         if (p_data->write.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "write descr failed, error status = %x", p_data->write.status);
+            printf("-ERROR: ESP_GATTC_WRITE_DESCR_EVT");
+            //--->ESP_LOGE(GATTC_TAG, "write descr failed, error status = %x", p_data->write.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "write descr success");
+        printf("-\n");ESP_LOGI(GATTC_TAG, "write descr success");
         break;
     case ESP_GATTC_SRVC_CHG_EVT: {
         esp_bd_addr_t bda;
         memcpy(bda, p_data->srvc_chg.remote_bda, sizeof(esp_bd_addr_t));
-        ESP_LOGI(GATTC_TAG, "ESP_GATTC_SRVC_CHG_EVT, bd_addr:");
+        printf("-ESP_GATTC_SRVC_CHG_EVT");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_SRVC_CHG_EVT, bd_addr:");
         esp_log_buffer_hex(GATTC_TAG, bda, sizeof(esp_bd_addr_t));
         break;
     }
     case ESP_GATTC_WRITE_CHAR_EVT:
         if (p_data->write.status != ESP_GATT_OK){
-            ESP_LOGE(GATTC_TAG, "write char failed, error status = %x", p_data->write.status);
+            printf("-ERROR: ESP_GATTC_WRITE_CHAR_EVT");
+            //--->ESP_LOGE(GATTC_TAG, "write char failed, error status = %x", p_data->write.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "Write char success ");
+        printf("-ESP_GATTC_WRITE_CHAR_EVT");
+        //--->ESP_LOGI(GATTC_TAG, "Write char success ");
         break;
     case ESP_GATTC_DISCONNECT_EVT:
-        ESP_LOGI(GATTC_TAG, "ESP_GATTC_DISCONNECT_EVT, reason = 0x%x", p_data->disconnect.reason);
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_DISCONNECT_EVT, reason = 0x%x", p_data->disconnect.reason);
         connect = false;
         get_service = false;
         break;
@@ -407,23 +456,26 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         break;
     }
 }
-
+//RG: GAP LAYER USED TO SCAN AND CONNECT TO THE SERVER
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     switch (event) {
     case ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT:
         if (param->local_privacy_cmpl.status != ESP_BT_STATUS_SUCCESS){
-            ESP_LOGE(GATTC_TAG, "config local privacy failed, error code =%x", param->local_privacy_cmpl.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "config local privacy failed, error code =%x", param->local_privacy_cmpl.status);
             break;
         }
         esp_err_t scan_ret = esp_ble_gap_set_ext_scan_params(&ext_scan_params);
         if (scan_ret){
-            ESP_LOGE(GATTC_TAG, "set extend scan params error, error code = %x", scan_ret);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "set extend scan params error, error code = %x", scan_ret);
         }
         break;
     case ESP_GAP_BLE_SET_EXT_SCAN_PARAMS_COMPLETE_EVT: {
         if (param->set_ext_scan_params.status != ESP_BT_STATUS_SUCCESS) {
-            ESP_LOGE(GATTC_TAG, "extend scan parameters set failed, error status = %x", param->set_ext_scan_params.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "extend scan parameters set failed, error status = %x", param->set_ext_scan_params.status);
             break;
         }
         //the unit of the duration is second
@@ -432,27 +484,32 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
     }
     case ESP_GAP_BLE_EXT_SCAN_START_COMPLETE_EVT:
         if (param->ext_scan_start.status != ESP_BT_STATUS_SUCCESS) {
-            ESP_LOGE(GATTC_TAG, "scan start failed, error status = %x", param->scan_start_cmpl.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "scan start failed, error status = %x", param->scan_start_cmpl.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "Scan start success");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "Scan start success");
         break;
     case ESP_GAP_BLE_PASSKEY_REQ_EVT:                           /* passkey request event */
         /* Call the following function to input the passkey which is displayed on the remote device */
-        //esp_ble_passkey_reply(gl_profile_tab[PROFILE_A_APP_ID].remote_bda, true, 0x00);
-        ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_PASSKEY_REQ_EVT");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_PASSKEY_REQ_EVT");
         break;
     case ESP_GAP_BLE_OOB_REQ_EVT: {
-        ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_OOB_REQ_EVT");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_OOB_REQ_EVT");
         uint8_t tk[16] = {1}; //If you paired with OOB, both devices need to use the same tk
         esp_ble_oob_req_reply(param->ble_security.ble_req.bd_addr, tk, sizeof(tk));
         break;
     }
     case ESP_GAP_BLE_LOCAL_IR_EVT:                               /* BLE local IR event */
-        ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_LOCAL_IR_EVT");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_LOCAL_IR_EVT");
         break;
     case ESP_GAP_BLE_LOCAL_ER_EVT:                               /* BLE local ER event */
-        ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_LOCAL_ER_EVT");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_LOCAL_ER_EVT");
         break;
     case ESP_GAP_BLE_SEC_REQ_EVT:
         /* send the positive(true) security response to the peer device to accept the security request.
@@ -463,28 +520,37 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         /* The app will receive this evt when the IO has DisplayYesNO capability and the peer device IO also has DisplayYesNo capability.
         show the passkey number to the user to confirm it with the number displayed by peer device. */
         esp_ble_confirm_reply(param->ble_security.ble_req.bd_addr, true);
-        ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_NC_REQ_EVT, the passkey Notify number:%d", param->ble_security.key_notif.passkey);
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "ESP_GAP_BLE_NC_REQ_EVT, the passkey Notify number:%d", param->ble_security.key_notif.passkey);
         break;
     case ESP_GAP_BLE_PASSKEY_NOTIF_EVT:  ///the app will receive this evt when the IO  has Output capability and the peer device IO has Input capability.
         ///show the passkey number to the user to input it in the peer device.
-        ESP_LOGI(GATTC_TAG, "The passkey Notify number:%06d", param->ble_security.key_notif.passkey);
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "The passkey Notify number:%06d", param->ble_security.key_notif.passkey);
         break;
     case ESP_GAP_BLE_KEY_EVT:
         //shows the ble key info share with peer device to the user.
-        ESP_LOGI(GATTC_TAG, "key type = %s", esp_key_type_to_str(param->ble_security.ble_key.key_type));
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "key type = %s", esp_key_type_to_str(param->ble_security.ble_key.key_type));
         break;
     case ESP_GAP_BLE_AUTH_CMPL_EVT: {
         esp_bd_addr_t bd_addr;
         memcpy(bd_addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+        printf("-\n");
         ESP_LOGI(GATTC_TAG, "remote BD_ADDR: %08x%04x",\
                 (bd_addr[0] << 24) + (bd_addr[1] << 16) + (bd_addr[2] << 8) + bd_addr[3],
                 (bd_addr[4] << 8) + bd_addr[5]);
-        ESP_LOGI(GATTC_TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
-        ESP_LOGI(GATTC_TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
+
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
         if (!param->ble_security.auth_cmpl.success) {
-            ESP_LOGI(GATTC_TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         } else {
-            ESP_LOGI(GATTC_TAG, "auth mode = %s",esp_auth_req_to_str(param->ble_security.auth_cmpl.auth_mode));
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "auth mode = %s",esp_auth_req_to_str(param->ble_security.auth_cmpl.auth_mode));
         }
         break;
     }
@@ -492,9 +558,11 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         uint8_t *adv_name = NULL;
         uint8_t adv_name_len = 0;
         if(param->ext_adv_report.params.event_type & ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY) {
-            ESP_LOGI(GATTC_TAG, "legacy adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "legacy adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
         } else {
-            ESP_LOGI(GATTC_TAG, "extend adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "extend adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
         }
         adv_name = esp_ble_resolve_adv_data(param->ext_adv_report.params.adv_data,
                                             ESP_BLE_AD_TYPE_NAME_CMPL, &adv_name_len);
@@ -503,7 +571,8 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
             esp_ble_gap_stop_ext_scan();
             esp_log_buffer_hex("adv addr", param->ext_adv_report.params.addr, 6);
             esp_log_buffer_char("adv name", adv_name, adv_name_len);
-            ESP_LOGI(GATTC_TAG, "Stop extend scan and create aux open, primary_phy %d secondary phy %d\n", param->ext_adv_report.params.primary_phy, param->ext_adv_report.params.secondly_phy);
+            printf("-\n");
+            //--->ESP_LOGI(GATTC_TAG, "Stop extend scan and create aux open, primary_phy %d secondary phy %d\n", param->ext_adv_report.params.primary_phy, param->ext_adv_report.params.secondly_phy);
 
             esp_ble_gap_prefer_ext_connect_params_set(param->ext_adv_report.params.addr,
                                                      ESP_BLE_GAP_PHY_1M_PREF_MASK | ESP_BLE_GAP_PHY_2M_PREF_MASK | ESP_BLE_GAP_PHY_CODED_PREF_MASK ,
@@ -517,10 +586,12 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
     }
     case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
         if (param->ext_scan_stop.status != ESP_BT_STATUS_SUCCESS){
-            ESP_LOGE(GATTC_TAG, "extend Scan stop failed, error status = %x", param->ext_scan_stop.status);
+            printf("-\n");
+            //--->ESP_LOGE(GATTC_TAG, "extend Scan stop failed, error status = %x", param->ext_scan_stop.status);
             break;
         }
-        ESP_LOGI(GATTC_TAG, "Stop extend scan successfully");
+        printf("-\n");
+        //--->ESP_LOGI(GATTC_TAG, "Stop extend scan successfully");
         break;
 
     default:
@@ -530,13 +601,15 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
-    ESP_LOGI(GATTC_TAG, "EVT %d, gattc if %d", event, gattc_if);
+    printf("-\n");
+    //--->ESP_LOGI(GATTC_TAG, "EVT %d, gattc if %d", event, gattc_if);
 
     /* If event is register event, store the gattc_if for each profile */
     if (event == ESP_GATTC_REG_EVT) {
         if (param->reg.status == ESP_GATT_OK) {
             gl_profile_tab[param->reg.app_id].gattc_if = gattc_if;
         } else {
+            printf("-\n");
             ESP_LOGI(GATTC_TAG, "Reg app failed, app_id %04x, status %d",
                     param->reg.app_id,
                     param->reg.status);
@@ -576,7 +649,7 @@ static void btn_event_cb(lv_event_t * e)
 /**
  * Create a button with a label and react on click event.
  */
-void lv_demo_hud(void)
+void lv_demo_hud(char str[])
 {
     lv_obj_t * btn = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
     lv_obj_set_pos(btn, 10, 10);                            /*Set its position*/
@@ -584,9 +657,20 @@ void lv_demo_hud(void)
     lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
 
     lv_obj_t * label = lv_label_create(btn);          /*Add a label to the button*/
-    lv_label_set_text(label, "Button");                     /*Set the labels text*/
+    lv_label_set_text(label, str);                     /*Set the labels text*/
     lv_obj_center(label);
+
+
+    lv_obj_t * btn2 = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
+    lv_obj_set_pos(btn2, 10, 70);                            /*Set its position*/
+    lv_obj_set_size(btn2, 120, 50);                          /*Set its size*/
+    lv_obj_add_event_cb(btn2, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
+
+    lv_obj_t * label2 = lv_label_create(btn2);          /*Add a label to the button*/
+    lv_label_set_text(label2, str);                     /*Set the labels text*/
+    lv_obj_center(label2);
 }
+
 
 void app_main(void)
 {
@@ -601,7 +685,8 @@ void app_main(void)
      * @note Only enable one demo every time.
      * 
      */
-    lv_demo_hud();
+    //lv_demo_hud();
+    ui_init();
 
     //lv_demo_widgets();      /* A widgets example. This is what you get out of the box */
     // lv_demo_music();        /* A modern, smartphone-like music player demo. */
@@ -622,50 +707,58 @@ void app_main(void)
 	esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 	ret = esp_bt_controller_init(&bt_cfg);
 	if (ret) {
-		ESP_LOGE(GATTC_TAG, "%s initialize controller failed: %s\n", __func__, esp_err_to_name(ret));
+		printf("-\n");
+		//--->ESP_LOGE(GATTC_TAG, "%s initialize controller failed: %s\n", __func__, esp_err_to_name(ret));
 		return;
 	}
 
 	ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
 	if (ret) {
-		ESP_LOGE(GATTC_TAG, "%s enable controller failed: %s\n", __func__, esp_err_to_name(ret));
+		printf("-\n");
+		//--->ESP_LOGE(GATTC_TAG, "%s enable controller failed: %s\n", __func__, esp_err_to_name(ret));
 		return;
 	}
 
 	ret = esp_bluedroid_init();
 	if (ret) {
-		ESP_LOGE(GATTC_TAG, "%s init bluetooth failed: %s\n", __func__, esp_err_to_name(ret));
+		printf("-\n");
+		//--->ESP_LOGE(GATTC_TAG, "%s init bluetooth failed: %s\n", __func__, esp_err_to_name(ret));
 		return;
 	}
 
     ret = esp_bluedroid_enable();
     if (ret) {
-        ESP_LOGE(GATTC_TAG, "%s enable bluetooth failed: %s\n", __func__, esp_err_to_name(ret));
+        printf("-\n");
+        //--->ESP_LOGE(GATTC_TAG, "%s enable bluetooth failed: %s\n", __func__, esp_err_to_name(ret));
         return;
     }
 
     //register the  callback function to the gap module
     ret = esp_ble_gap_register_callback(esp_gap_cb);
     if (ret){
-        ESP_LOGE(GATTC_TAG, "%s gap register error, error code = %x\n", __func__, ret);
+        printf("-\n");
+        //--->ESP_LOGE(GATTC_TAG, "%s gap register error, error code = %x\n", __func__, ret);
         return;
     }
 
     //register the callback function to the gattc module
 	ret = esp_ble_gattc_register_callback(esp_gattc_cb);
 	if(ret){
-		ESP_LOGE(GATTC_TAG, "%s gattc register error, error code = %x\n", __func__, ret);
+		printf("-\n");
+		//--->ESP_LOGE(GATTC_TAG, "%s gattc register error, error code = %x\n", __func__, ret);
 		return;
 	}
 
     ret = esp_ble_gattc_app_register(PROFILE_A_APP_ID);
     if (ret){
-        ESP_LOGE(GATTC_TAG, "%s gattc app register error, error code = %x\n", __func__, ret);
+        printf("-\n");
+        //--->ESP_LOGE(GATTC_TAG, "%s gattc app register error, error code = %x\n", __func__, ret);
     }
 
     ret = esp_ble_gatt_set_local_mtu(200);
     if (ret){
-        ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", ret);
+        printf("-\n");
+        //--->ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", ret);
     }
 
     /* set the security iocap & auth_req & key size & init key response key parameters to the stack*/

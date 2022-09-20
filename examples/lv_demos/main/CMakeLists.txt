@@ -1,6 +1,10 @@
 idf_component_register(
     SRCS
         "lv_demos.c"
+        "ui_helpers.c"
+        "ui_events.c"
+        "ui.c"
+        "ui_img_rsz_picture4_png.c"
     SRC_DIRS
         "../../../../../components"    
 	INCLUDE_DIRS
