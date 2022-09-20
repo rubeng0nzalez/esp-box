@@ -5,6 +5,8 @@ idf_component_register(
         "ui_events.c"
         "ui.c"
         "ui_img_rsz_picture4_png.c"
+        "ui_img_rsz_tpmsicon_png.c"
+        "ui_img_rsz_dexter_big_png.c"
     SRC_DIRS
         "../../../../../components"    
 	INCLUDE_DIRS
