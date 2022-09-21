@@ -44,7 +44,7 @@ static void ui_event_Image4(lv_event_t * e)
 }
 
 ///////////////////// SCREENS ////////////////////
-void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4[])
+void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4[], char tpms5[], char tpms6[])
 {
 
     // ui_Screen1
@@ -126,6 +126,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image13, LV_ALIGN_CENTER);
 
+    lv_obj_add_flag(ui_Image13, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Image13, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image13, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -142,6 +143,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image1, LV_ALIGN_CENTER);
 
+    lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -186,6 +188,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image2, LV_ALIGN_CENTER);
 
+    lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -202,6 +205,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image3, LV_ALIGN_CENTER);
 
+    lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -218,7 +222,8 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image4, LV_ALIGN_CENTER);
 
-    lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_add_event_cb(ui_Image4, ui_event_Image4, LV_EVENT_ALL, NULL);
@@ -236,6 +241,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_Image5, LV_ALIGN_CENTER);
 
+    lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -251,7 +257,7 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_LblTPMS5, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_LblTPMS5, "TPMS5");
+    lv_label_set_text(ui_LblTPMS5, tpms5);
 
     // ui_LblTPMS6
 
@@ -265,16 +271,68 @@ void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4
 
     lv_obj_set_align(ui_LblTPMS6, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_LblTPMS6, "TPMS6");
+    lv_label_set_text(ui_LblTPMS6, tpms6);
 
 }
 
-void ui_Screen1_screen_update(char tpms1_update[], char tpms2_update[], char tpms3_update[], char tpms4_update[])
+void ui_Screen1_screen_update(int tpms[])
 {
-	lv_label_set_text(ui_LblTPMS1, tpms1_update);
-	lv_label_set_text(ui_LblTPMS2, tpms2_update);
-	lv_label_set_text(ui_LblTPMS3, tpms3_update);
-	lv_label_set_text(ui_LblTPMS4, tpms4_update);
+	char buff_0[] = "---------";
+	char buff_1[] = "---------";
+	char buff_2[] = "---------";
+	char buff_3[] = "---------";
+	char buff_4[] = "---------";
+	char buff_5[] = "---------";
+
+	if(tpms[0] <=35 || tpms[0] >= 60){
+		lv_obj_clear_flag(ui_Image13, LV_OBJ_FLAG_HIDDEN);
+	}
+	else
+	{
+		lv_obj_add_flag(ui_Image13, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	if(tpms[1] <=35 || tpms[1] >= 60){
+		lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	if(tpms[2] <=35 || tpms[2] >= 60){
+		lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	if(tpms[3] <=35 || tpms[3] >= 60){
+		lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	if(tpms[4] <=35 || tpms[4] >= 60){
+		lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	if(tpms[5] <=35 || tpms[5] >= 60){
+		lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_HIDDEN);
+	}
+
+    lv_label_set_text(ui_LblTPMS1, strcat(itoa(tpms[0], buff_0, 10), " PSI"));
+	lv_label_set_text(ui_LblTPMS2, strcat(itoa(tpms[1], buff_1, 10), " PSI"));
+	lv_label_set_text(ui_LblTPMS3, strcat(itoa(tpms[2], buff_2, 10), " PSI"));
+	lv_label_set_text(ui_LblTPMS4, strcat(itoa(tpms[3], buff_3, 10), " PSI"));
+	lv_label_set_text(ui_LblTPMS5, strcat(itoa(tpms[4], buff_4, 10), " PSI"));
+	lv_label_set_text(ui_LblTPMS6, strcat(itoa(tpms[5], buff_5, 10), " PSI"));
 }
 
 void ui_init(void)
@@ -283,7 +341,7 @@ void ui_init(void)
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
-    ui_Screen1_screen_init("0 PSI","0 PSI","0 PSI","0 PSI");
+    ui_Screen1_screen_init("0 PSI","0 PSI","0 PSI","0 PSI","0 PSI","0 PSI");
     lv_disp_load_scr(ui_Screen1);
 }
 

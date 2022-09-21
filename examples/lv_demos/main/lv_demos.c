@@ -57,7 +57,7 @@ static esp_gattc_descr_elem_t *descr_elem_result = NULL;//RG: DATA VALUE FROM TH
 
 
 ///Declare static functions
-void ui_Screen1_screen_update(char tpms1[], char tpms2[], char tpms3[], char tpms4[]);
+void ui_Screen1_screen_update(int tpms[]);
 void lv_demo_hud(char str[]);	//RG:FUNCTION TO SIMULATE THE HUD
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);	//RG:GAP LAYER METHOD (SCAN)
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param); //RG:GATT LAYER METHOD CLIENT
@@ -72,12 +72,7 @@ static esp_bt_uuid_t remote_filter_service_uuid = {//RG: REMOTE FILTER SERVICE (
     },
 };
 
-char bf_1[8] = "--------";
-char bf_2[8] = "--------";
-char bf_3[8] = "--------";
-char bf_4[8] = "--------";
-char bf_5[8] = "--------";
-char bf_6[8] = "--------";
+int TPMS[6] = {0,0,0,0,0,0};
 static bool connect = false;		//RG: FLAG TO VALIDATE IF SERVER-CLIENT CONNECTION HAS BEEN STABLISHED
 static bool get_service = false;	//RG: FLAG TO VALIDATE IF THE SERVICE HAS BEEN GOTTEN ALREADY FROM THE CLIENT
 static const char remote_device_name[] = "ESP_BLE50_SERVER";//RG: NAME OF THE SERVER THE SYSTEM WILL BE LOOKING FOR
@@ -447,7 +442,13 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 			break;
 		}
     	printf("p_data->notify.value_len %d\n", p_data->read.value_len);
-    	ui_Screen1_screen_update(itoa((int)p_data->read.value[0],bf_1,10), itoa((int)p_data->read.value[1],bf_2,10), itoa((int)p_data->read.value[2],bf_3,10), itoa((int)p_data->read.value[3],bf_4,10));
+    	TPMS[0] = (int)p_data->read.value[0];
+    	TPMS[1] = (int)p_data->read.value[1];
+    	TPMS[2] = (int)p_data->read.value[2];
+    	TPMS[3] = (int)p_data->read.value[3];
+    	TPMS[4] = (int)p_data->read.value[4];
+    	TPMS[5] = (int)p_data->read.value[5];
+    	ui_Screen1_screen_update(TPMS);
     	//RG: READ EVENT FROM CLIENT TO SERVER
     	//ESP_LOGI(GATTC_TAG, "GATT PROFILE - ESP_GATTC_READ_DESCR_EVT Read Descr Success ");
 
