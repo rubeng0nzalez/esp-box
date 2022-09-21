@@ -8,20 +8,20 @@
 
 ///////////////////// VARIABLES ////////////////////
 lv_obj_t * ui_Screen1;
-lv_obj_t * ui_Label1;
-lv_obj_t * ui_Label2;
+lv_obj_t * ui_LblTPMS1;
+lv_obj_t * ui_LblTPMS2;
 lv_obj_t * ui_trailer;
 lv_obj_t * ui_Image12;
 lv_obj_t * ui_Image13;
 lv_obj_t * ui_Image1;
-lv_obj_t * ui_Label3;
-lv_obj_t * ui_Label4;
+lv_obj_t * ui_LblTPMS3;
+lv_obj_t * ui_LblTPMS4;
 lv_obj_t * ui_Image2;
 lv_obj_t * ui_Image3;
 lv_obj_t * ui_Image4;
 lv_obj_t * ui_Image5;
-lv_obj_t * ui_Label5;
-lv_obj_t * ui_Label6;
+lv_obj_t * ui_LblTPMS5;
+lv_obj_t * ui_LblTPMS6;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -34,9 +34,17 @@ lv_obj_t * ui_Label6;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
+static void ui_event_Image4(lv_event_t * e)
+{
+    lv_event_code_t event = lv_event_get_code(e);
+    lv_obj_t * ta = lv_event_get_target(e);
+    if(event == LV_EVENT_VALUE_CHANGED) {
+        _ui_flag_modify(ui_Image4, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
-void ui_Screen1_screen_init(void)
+void ui_Screen1_screen_init(char tpms1[], char tpms2[], char tpms3[], char tpms4[])
 {
 
     // ui_Screen1
@@ -45,33 +53,33 @@ void ui_Screen1_screen_init(void)
 
     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);
 
-    // ui_Label1
+    // ui_LblTPMS1
 
-    ui_Label1 = lv_label_create(ui_Screen1);
+    ui_LblTPMS1 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS1, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS1, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label1, -70);
-    lv_obj_set_y(ui_Label1, -75);
+    lv_obj_set_x(ui_LblTPMS1, -70);
+    lv_obj_set_y(ui_LblTPMS1, -75);
 
-    lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS1, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label1, "TPMS1");
+    lv_label_set_text(ui_LblTPMS1, tpms1);
 
-    // ui_Label2
+    // ui_LblTPMS2
 
-    ui_Label2 = lv_label_create(ui_Screen1);
+    ui_LblTPMS2 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS2, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS2, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label2, 70);
-    lv_obj_set_y(ui_Label2, -75);
+    lv_obj_set_x(ui_LblTPMS2, 70);
+    lv_obj_set_y(ui_LblTPMS2, -75);
 
-    lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS2, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label2, "TPMS2");
+    lv_label_set_text(ui_LblTPMS2, tpms2);
 
     // ui_trailer
 
@@ -137,33 +145,33 @@ void ui_Screen1_screen_init(void)
     lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE);
 
-    // ui_Label3
+    // ui_LblTPMS3
 
-    ui_Label3 = lv_label_create(ui_Screen1);
+    ui_LblTPMS3 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS3, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS3, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label3, -70);
-    lv_obj_set_y(ui_Label3, -5);
+    lv_obj_set_x(ui_LblTPMS3, -70);
+    lv_obj_set_y(ui_LblTPMS3, 48);
 
-    lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS3, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label3, "TPMS3");
+    lv_label_set_text(ui_LblTPMS3, tpms3);
 
-    // ui_Label4
+    // ui_LblTPMS4
 
-    ui_Label4 = lv_label_create(ui_Screen1);
+    ui_LblTPMS4 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS4, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS4, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label4, 70);
-    lv_obj_set_y(ui_Label4, -5);
+    lv_obj_set_x(ui_LblTPMS4, 70);
+    lv_obj_set_y(ui_LblTPMS4, 48);
 
-    lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS4, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label4, "TPMS4");
+    lv_label_set_text(ui_LblTPMS4, tpms4);
 
     // ui_Image2
 
@@ -210,8 +218,10 @@ void ui_Screen1_screen_init(void)
 
     lv_obj_set_align(ui_Image4, LV_ALIGN_CENTER);
 
-    lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_add_event_cb(ui_Image4, ui_event_Image4, LV_EVENT_ALL, NULL);
 
     // ui_Image5
 
@@ -229,34 +239,42 @@ void ui_Screen1_screen_init(void)
     lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_SCROLLABLE);
 
-    // ui_Label5
+    // ui_LblTPMS5
 
-    ui_Label5 = lv_label_create(ui_Screen1);
+    ui_LblTPMS5 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label5, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label5, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS5, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS5, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label5, -70);
-    lv_obj_set_y(ui_Label5, 74);
+    lv_obj_set_x(ui_LblTPMS5, -70);
+    lv_obj_set_y(ui_LblTPMS5, 74);
 
-    lv_obj_set_align(ui_Label5, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS5, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label5, "TPMS5");
+    lv_label_set_text(ui_LblTPMS5, "TPMS5");
 
-    // ui_Label6
+    // ui_LblTPMS6
 
-    ui_Label6 = lv_label_create(ui_Screen1);
+    ui_LblTPMS6 = lv_label_create(ui_Screen1);
 
-    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);
+    lv_obj_set_width(ui_LblTPMS6, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_LblTPMS6, LV_SIZE_CONTENT);
 
-    lv_obj_set_x(ui_Label6, 70);
-    lv_obj_set_y(ui_Label6, 74);
+    lv_obj_set_x(ui_LblTPMS6, 70);
+    lv_obj_set_y(ui_LblTPMS6, 74);
 
-    lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_LblTPMS6, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_Label6, "TPMS6");
+    lv_label_set_text(ui_LblTPMS6, "TPMS6");
 
+}
+
+void ui_Screen1_screen_update(char tpms1_update[], char tpms2_update[], char tpms3_update[], char tpms4_update[])
+{
+	lv_label_set_text(ui_LblTPMS1, tpms1_update);
+	lv_label_set_text(ui_LblTPMS2, tpms2_update);
+	lv_label_set_text(ui_LblTPMS3, tpms3_update);
+	lv_label_set_text(ui_LblTPMS4, tpms4_update);
 }
 
 void ui_init(void)
@@ -265,7 +283,7 @@ void ui_init(void)
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
-    ui_Screen1_screen_init();
+    ui_Screen1_screen_init("0 PSI","0 PSI","0 PSI","0 PSI");
     lv_disp_load_scr(ui_Screen1);
 }
 

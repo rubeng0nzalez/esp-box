@@ -18,7 +18,7 @@
  *      See the License for the specific language governing permissions and
  *      limitations under the License.
  */
-
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -57,6 +57,7 @@ static esp_gattc_descr_elem_t *descr_elem_result = NULL;//RG: DATA VALUE FROM TH
 
 
 ///Declare static functions
+void ui_Screen1_screen_update(char tpms1[], char tpms2[], char tpms3[], char tpms4[]);
 void lv_demo_hud(char str[]);	//RG:FUNCTION TO SIMULATE THE HUD
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);	//RG:GAP LAYER METHOD (SCAN)
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param); //RG:GATT LAYER METHOD CLIENT
@@ -71,6 +72,12 @@ static esp_bt_uuid_t remote_filter_service_uuid = {//RG: REMOTE FILTER SERVICE (
     },
 };
 
+char bf_1[8] = "--------";
+char bf_2[8] = "--------";
+char bf_3[8] = "--------";
+char bf_4[8] = "--------";
+char bf_5[8] = "--------";
+char bf_6[8] = "--------";
 static bool connect = false;		//RG: FLAG TO VALIDATE IF SERVER-CLIENT CONNECTION HAS BEEN STABLISHED
 static bool get_service = false;	//RG: FLAG TO VALIDATE IF THE SERVICE HAS BEEN GOTTEN ALREADY FROM THE CLIENT
 static const char remote_device_name[] = "ESP_BLE50_SERVER";//RG: NAME OF THE SERVER THE SYSTEM WILL BE LOOKING FOR
@@ -363,6 +370,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             //--->ESP_LOGE(GATTC_TAG, "reg for notify failed, error status = %x", p_data->reg_for_notify.status);
             break;
         }
+        else{
 
             uint16_t count = 0;
             uint16_t offset = 0;
@@ -390,12 +398,12 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                              descr_elem_result,
                                                              &count,
                                                              offset);
-                if (ret_status != ESP_GATT_OK){
-                    printf("-ERROR: ESP_GATTC_REG_FOR_NOTIFY_EVT");
-                    //--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_descr error, %d", __LINE__);
-                }
+					if (ret_status != ESP_GATT_OK){
+						printf("-ERROR: ESP_GATTC_REG_FOR_NOTIFY_EVT");
+						//--->ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_all_descr error, %d", __LINE__);
+					}
 
-                    for (int i = 0; i < count; ++i)
+                    /*for (int i = 0; i < count; ++i)
                     {
                         if (descr_elem_result[i].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[i].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG)
                         {
@@ -409,11 +417,22 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
                             break;
                         }
-                    }
-                }
-                free(descr_elem_result);
-            }
+                    }*/
 
+					if (count > 0 && descr_elem_result[0].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[0].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG){
+						ret_status = esp_ble_gattc_read_char_descr( gattc_if,
+																 gl_profile_tab[PROFILE_A_APP_ID].conn_id,
+																 descr_elem_result[0].handle,
+																 ESP_GATT_AUTH_REQ_NONE);//RG:ESP_GATT_AUTH_REQ_NONE TO INDICATE THAT THE WRITE REQUEST DOES NOT NEED AUTHORIZATION
+					}
+
+					if (ret_status != ESP_GATT_OK){//RG:IF ERRORS
+						ESP_LOGE(GATTC_TAG, "esp_ble_gattc_read_char_descr error");
+					}
+                }
+                //free(descr_elem_result);
+            }
+        }
         break;
     }
     case ESP_GATTC_NOTIFY_EVT:
@@ -421,6 +440,82 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         //--->ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
         esp_log_buffer_hex(GATTC_TAG, p_data->notify.value, p_data->notify.value_len);
         break;
+    case ESP_GATTC_READ_DESCR_EVT:
+
+    	if (p_data->write.status != ESP_GATT_OK){
+			ESP_LOGE(GATTC_TAG, "Error, when read descr failed, error status = %x", p_data->write.status);
+			break;
+		}
+    	printf("p_data->notify.value_len %d\n", p_data->read.value_len);
+    	ui_Screen1_screen_update(itoa((int)p_data->read.value[0],bf_1,10), itoa((int)p_data->read.value[1],bf_2,10), itoa((int)p_data->read.value[2],bf_3,10), itoa((int)p_data->read.value[3],bf_4,10));
+    	//RG: READ EVENT FROM CLIENT TO SERVER
+    	//ESP_LOGI(GATTC_TAG, "GATT PROFILE - ESP_GATTC_READ_DESCR_EVT Read Descr Success ");
+
+	    	   printf("\t    ____A____\t   ____B____\n");
+			   printf("\t   |= = = = =|\t  |= = = = =|\n");
+			   printf("\t   |= %02dPSI =|\t  |= %02dPSI =|\n", p_data->read.value[0],p_data->read.value[1]);
+			   printf("\t   |=_=_=_=_=|\t  |=_=_=_=_=|\n");
+			 printf("     _____________________________________\n");
+			printf("    /\t\t\t\t\t  |\n");
+		   printf("   /\t\t\t\t\t  |\n");
+		  printf("  /\t\t\t\t\t  |\n");
+		 printf(" /\t\t\t\t\t  |\n");
+		printf("/\t\t\t\t\t  |\n");
+		printf("\\ \t\t\t\t\t  |\n");
+		 printf(" \\ \t\t\t\t\t  |\n");
+		  printf("  \\ \t\t\t\t\t  |\n");
+		   printf("   \\______________________________________|\n");
+			   printf("\t    _________\t   _________\n");
+			   printf("\t   |= = = = =|\t  |= = = = =|\n");
+			   printf("\t   |= %02dPSI =|\t  |= %02dPSI =|\n",p_data->read.value[2],p_data->read.value[3]);
+			   printf("\t   |=_=_=_=_=|\t  |_=_=_=_=_|\n");
+		       printf("\t\tC\t       D\n");
+
+
+
+
+
+    	/*
+        ESP_LOGI(GATTC_TAG, "\n---------------\nWheel A = %d PSI\nWheel B = %d PSI\nWheel C = %d PSI\nWheel D = %d PSI", p_data->read.value[0],
+        															p_data->read.value[1],
+																	p_data->read.value[2],
+																	p_data->read.value[3]);
+*/
+//        printf("\n-----DISPLAY-----\nWheel A = %d PSI\nWheel B = %d PSI\nWheel C = %d PSI\nWheel D = %d PSI\n", p_data->read.value[0],
+//                															p_data->read.value[1],
+//        																	p_data->read.value[2],
+//        																	p_data->read.value[3]);
+/*
+        printf("\t      _\n");
+		printf("\t     / \\ \n");
+		printf("\t    /   \\ \n");
+		printf("\t   /     \\ \n");
+		printf(" _________/_______\\_________\n");
+		printf("|   A\t|\t    |\tB   |\n");
+		printf("|  %02d\t|\t    |\t%02d  |\n",p_data->read.value[0],p_data->read.value[1]);
+		printf("|_______|           |_______|\n");
+		printf("\t|           |\n");
+		printf(" _______|           |_______\n");
+		printf("|   C   |\t    |\tD   |\n");
+		printf("|  %02d\t|\t    |\t%02d  |\n",p_data->read.value[2],p_data->read.value[3]);
+		printf("|_______|           |_______|\n");
+		printf("\t|           |\n");
+		printf("\t|___________|\n");
+*/
+
+
+        vTaskDelay(8000 / portTICK_PERIOD_MS);
+        esp_gatt_status_t ret_status = esp_ble_gattc_read_char_descr( gattc_if,
+												 gl_profile_tab[PROFILE_A_APP_ID].conn_id,
+												 descr_elem_result[0].handle,
+												 ESP_GATT_AUTH_REQ_NONE);//RG:ESP_GATT_AUTH_REQ_NONE TO INDICATE THAT THE WRITE REQUEST DOES NOT NEED AUTHORIZATION
+
+        if (ret_status != ESP_GATT_OK){//RG:IF ERRORS
+            ESP_LOGE(GATTC_TAG, "esp_ble_gattc_read_char_descr error");
+        }
+
+		break;
+
     case ESP_GATTC_WRITE_DESCR_EVT:
         if (p_data->write.status != ESP_GATT_OK){
             printf("-ERROR: ESP_GATTC_WRITE_DESCR_EVT");
@@ -530,7 +625,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         break;
     case ESP_GAP_BLE_KEY_EVT:
         //shows the ble key info share with peer device to the user.
-        printf("-\n");
+        printf("- key type = %s", esp_key_type_to_str(param->ble_security.ble_key.key_type));
         //--->ESP_LOGI(GATTC_TAG, "key type = %s", esp_key_type_to_str(param->ble_security.ble_key.key_type));
         break;
     case ESP_GAP_BLE_AUTH_CMPL_EVT: {
@@ -549,7 +644,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
             printf("-\n");
             //--->ESP_LOGI(GATTC_TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         } else {
-            printf("-\n");
+            printf("Auth mode = %s",esp_auth_req_to_str(param->ble_security.auth_cmpl.auth_mode));
             //--->ESP_LOGI(GATTC_TAG, "auth mode = %s",esp_auth_req_to_str(param->ble_security.auth_cmpl.auth_mode));
         }
         break;
@@ -569,8 +664,8 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         if (!connect && strlen(remote_device_name) == adv_name_len && strncmp((char *)adv_name, remote_device_name, adv_name_len) == 0) {
             connect = true;
             esp_ble_gap_stop_ext_scan();
-            esp_log_buffer_hex("adv addr", param->ext_adv_report.params.addr, 6);
-            esp_log_buffer_char("adv name", adv_name, adv_name_len);
+            esp_log_buffer_hex("Adv addr", param->ext_adv_report.params.addr, 6);
+            esp_log_buffer_char("Adv name", adv_name, adv_name_len);
             printf("-\n");
             //--->ESP_LOGI(GATTC_TAG, "Stop extend scan and create aux open, primary_phy %d secondary phy %d\n", param->ext_adv_report.params.primary_phy, param->ext_adv_report.params.secondly_phy);
 

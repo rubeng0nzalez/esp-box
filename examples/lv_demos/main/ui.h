@@ -17,20 +17,20 @@ extern "C" {
 #endif
 
 extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_Label1;
-extern lv_obj_t * ui_Label2;
+extern lv_obj_t * ui_LblTPMS1;
+extern lv_obj_t * ui_LblTPMS2;
 extern lv_obj_t * ui_trailer;
 extern lv_obj_t * ui_Image12;
 extern lv_obj_t * ui_Image13;
 extern lv_obj_t * ui_Image1;
-extern lv_obj_t * ui_Label3;
-extern lv_obj_t * ui_Label4;
+extern lv_obj_t * ui_LblTPMS3;
+extern lv_obj_t * ui_LblTPMS4;
 extern lv_obj_t * ui_Image2;
 extern lv_obj_t * ui_Image3;
 extern lv_obj_t * ui_Image4;
 extern lv_obj_t * ui_Image5;
-extern lv_obj_t * ui_Label5;
-extern lv_obj_t * ui_Label6;
+extern lv_obj_t * ui_LblTPMS5;
+extern lv_obj_t * ui_LblTPMS6;
 
 
 LV_IMG_DECLARE(ui_img_rsz_picture4_png);    // assets\rsz_picture4.png
