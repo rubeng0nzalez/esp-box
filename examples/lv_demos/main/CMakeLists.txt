@@ -7,6 +7,8 @@ idf_component_register(
         "ui_img_rsz_picture4_png.c"
         "ui_img_rsz_tpmsicon_png.c"
         "ui_img_rsz_dexter_big_png.c"
+        "ui_img_weight_s_png.c"
+        "ui_img_weight_truck_png.c"
     SRC_DIRS
         "../../../../../components"    
 	INCLUDE_DIRS

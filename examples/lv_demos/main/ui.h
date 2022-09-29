@@ -31,11 +31,29 @@ extern lv_obj_t * ui_Image4;
 extern lv_obj_t * ui_Image5;
 extern lv_obj_t * ui_LblTPMS5;
 extern lv_obj_t * ui_LblTPMS6;
+extern lv_obj_t * ui_Button1;
+extern lv_obj_t * ui_Label2;
+extern lv_obj_t * ui_Screen2;
+extern lv_obj_t * ui_Image8;
+extern lv_obj_t * ui_LblWeight1;
+extern lv_obj_t * ui_LblWeight2;
+extern lv_obj_t * ui_LblWeight3;
+extern lv_obj_t * ui_LblWeight4;
+extern lv_obj_t * ui_Image14;
+extern lv_obj_t * ui_Image7;
+extern lv_obj_t * ui_Image9;
+extern lv_obj_t * ui_Image10;
+extern lv_obj_t * ui_Image6;
+extern lv_obj_t * ui_Button3;
+extern lv_obj_t * ui_Label1;
+extern lv_obj_t * ui_LblLoadStatus;
 
 
 LV_IMG_DECLARE(ui_img_rsz_picture4_png);    // assets\rsz_picture4.png
 LV_IMG_DECLARE(ui_img_rsz_dexter_big_png);    // assets\rsz_dexter_big.png
 LV_IMG_DECLARE(ui_img_rsz_tpmsicon_png);    // assets\rsz_tpmsicon.png
+LV_IMG_DECLARE(ui_img_weight_truck_png);    // assets\weight_truck.png
+LV_IMG_DECLARE(ui_img_weight_s_png);    // assets\weight_s.png
 
 
 

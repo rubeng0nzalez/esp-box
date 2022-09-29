@@ -57,7 +57,10 @@ static esp_gattc_descr_elem_t *descr_elem_result = NULL;//RG: DATA VALUE FROM TH
 
 
 ///Declare static functions
-void ui_Screen1_screen_update(int tpms[]);
+//void ui_Screen1_screen_update(int tpms[]);
+//void ui_Screen2_screen_update(int weight[]);
+void ui_ScreenX_screen_update(int []);
+
 void lv_demo_hud(char str[]);	//RG:FUNCTION TO SIMULATE THE HUD
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);	//RG:GAP LAYER METHOD (SCAN)
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param); //RG:GATT LAYER METHOD CLIENT
@@ -72,7 +75,8 @@ static esp_bt_uuid_t remote_filter_service_uuid = {//RG: REMOTE FILTER SERVICE (
     },
 };
 
-int TPMS[6] = {0,0,0,0,0,0};
+int Data[] = {0,0,0,0,0,0,0,0,0,0};
+
 static bool connect = false;		//RG: FLAG TO VALIDATE IF SERVER-CLIENT CONNECTION HAS BEEN STABLISHED
 static bool get_service = false;	//RG: FLAG TO VALIDATE IF THE SERVICE HAS BEEN GOTTEN ALREADY FROM THE CLIENT
 static const char remote_device_name[] = "ESP_BLE50_SERVER";//RG: NAME OF THE SERVER THE SYSTEM WILL BE LOOKING FOR
@@ -442,68 +446,23 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 			break;
 		}
     	printf("p_data->notify.value_len %d\n", p_data->read.value_len);
-    	TPMS[0] = (int)p_data->read.value[0];
-    	TPMS[1] = (int)p_data->read.value[1];
-    	TPMS[2] = (int)p_data->read.value[2];
-    	TPMS[3] = (int)p_data->read.value[3];
-    	TPMS[4] = (int)p_data->read.value[4];
-    	TPMS[5] = (int)p_data->read.value[5];
-    	ui_Screen1_screen_update(TPMS);
+    	Data[0] = (int)p_data->read.value[0];//RG: TPMS1
+    	Data[1] = (int)p_data->read.value[1];//RG: TPMS2
+    	Data[2] = (int)p_data->read.value[2];//RG: TPMS3
+    	Data[3] = (int)p_data->read.value[3];//RG: TPMS4
+    	Data[4] = (int)p_data->read.value[4];//RG: TPMS5
+    	Data[5] = (int)p_data->read.value[5];//RG: TPMS6
+    	Data[6] = (int)(p_data->read.value[6] * 0x100) + p_data->read.value[7];//RG: WEIGHT1_W1 | WEIGHT1_W2
+    	Data[7] = (int)(p_data->read.value[8] * 0x100) + p_data->read.value[9];//RG: WEIGHT2_W1 | WEIGHT2_W2
+    	Data[8] = (int)(p_data->read.value[10] * 0x100) + p_data->read.value[11];//RG: WEIGHT3_W1 | WEIGHT3_W2
+    	Data[9] = (int)(p_data->read.value[12] * 0x100) + p_data->read.value[13];//RG: WEIGHT4_W1 | WEIGHT4_W2
+
+    	ui_ScreenX_screen_update(Data);
+    	//ui_Screen1_screen_update(TPMSData);
+    	//ui_Screen2_screen_update(WEIGHTData);
+
     	//RG: READ EVENT FROM CLIENT TO SERVER
     	//ESP_LOGI(GATTC_TAG, "GATT PROFILE - ESP_GATTC_READ_DESCR_EVT Read Descr Success ");
-
-	    	   printf("\t    ____A____\t   ____B____\n");
-			   printf("\t   |= = = = =|\t  |= = = = =|\n");
-			   printf("\t   |= %02dPSI =|\t  |= %02dPSI =|\n", p_data->read.value[0],p_data->read.value[1]);
-			   printf("\t   |=_=_=_=_=|\t  |=_=_=_=_=|\n");
-			 printf("     _____________________________________\n");
-			printf("    /\t\t\t\t\t  |\n");
-		   printf("   /\t\t\t\t\t  |\n");
-		  printf("  /\t\t\t\t\t  |\n");
-		 printf(" /\t\t\t\t\t  |\n");
-		printf("/\t\t\t\t\t  |\n");
-		printf("\\ \t\t\t\t\t  |\n");
-		 printf(" \\ \t\t\t\t\t  |\n");
-		  printf("  \\ \t\t\t\t\t  |\n");
-		   printf("   \\______________________________________|\n");
-			   printf("\t    _________\t   _________\n");
-			   printf("\t   |= = = = =|\t  |= = = = =|\n");
-			   printf("\t   |= %02dPSI =|\t  |= %02dPSI =|\n",p_data->read.value[2],p_data->read.value[3]);
-			   printf("\t   |=_=_=_=_=|\t  |_=_=_=_=_|\n");
-		       printf("\t\tC\t       D\n");
-
-
-
-
-
-    	/*
-        ESP_LOGI(GATTC_TAG, "\n---------------\nWheel A = %d PSI\nWheel B = %d PSI\nWheel C = %d PSI\nWheel D = %d PSI", p_data->read.value[0],
-        															p_data->read.value[1],
-																	p_data->read.value[2],
-																	p_data->read.value[3]);
-*/
-//        printf("\n-----DISPLAY-----\nWheel A = %d PSI\nWheel B = %d PSI\nWheel C = %d PSI\nWheel D = %d PSI\n", p_data->read.value[0],
-//                															p_data->read.value[1],
-//        																	p_data->read.value[2],
-//        																	p_data->read.value[3]);
-/*
-        printf("\t      _\n");
-		printf("\t     / \\ \n");
-		printf("\t    /   \\ \n");
-		printf("\t   /     \\ \n");
-		printf(" _________/_______\\_________\n");
-		printf("|   A\t|\t    |\tB   |\n");
-		printf("|  %02d\t|\t    |\t%02d  |\n",p_data->read.value[0],p_data->read.value[1]);
-		printf("|_______|           |_______|\n");
-		printf("\t|           |\n");
-		printf(" _______|           |_______\n");
-		printf("|   C   |\t    |\tD   |\n");
-		printf("|  %02d\t|\t    |\t%02d  |\n",p_data->read.value[2],p_data->read.value[3]);
-		printf("|_______|           |_______|\n");
-		printf("\t|           |\n");
-		printf("\t|___________|\n");
-*/
-
 
         vTaskDelay(8000 / portTICK_PERIOD_MS);
         esp_gatt_status_t ret_status = esp_ble_gattc_read_char_descr( gattc_if,
@@ -775,20 +734,13 @@ void app_main(void)
     ESP_ERROR_CHECK(lv_port_init());
     bsp_lcd_set_backlight(true);
 
-    /**
-     * @brief Demos provided by LVGL.
-     * 
-     * @note Only enable one demo every time.
-     * 
-     */
     //lv_demo_hud();
-    ui_init();
+    ui_init();//RG:CALLS THE FUNCTION TO INITIALIZE THE UX
 
     //lv_demo_widgets();      /* A widgets example. This is what you get out of the box */
     // lv_demo_music();        /* A modern, smartphone-like music player demo. */
     // lv_demo_stress();       /* A stress test for LVGL. */
     // lv_demo_benchmark();    /* A demo to measure the performance of LVGL or to compare different settings. */
-
 
     // Initialize NVS.
 	esp_err_t ret = nvs_flash_init();
@@ -796,9 +748,12 @@ void app_main(void)
 		ESP_ERROR_CHECK(nvs_flash_erase());
 		ret = nvs_flash_init();
 	}
-	ESP_ERROR_CHECK( ret );
+	ESP_ERROR_CHECK( ret );//RG:CHECKS IF ERRORS EXIST
 
+	//RG: FUNCTION TO FREE UNUSED BT CLASS MEMORY
+	//RG: SHOULD BE CALLED ONLY BEFORE ESP_BT_CONTROLLER_INIT OR AFTER ESP_BT_CONTROLLER_DEINIT
 	ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    //RG:ONCE THE BT CONTROLLER MEMORY IS RELEASED THE PROCESS CANNOT BE REVERSED
 
 	esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 	ret = esp_bt_controller_init(&bt_cfg);
