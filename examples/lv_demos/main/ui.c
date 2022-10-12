@@ -6,6 +6,7 @@
 #include "ui.h"
 #include "ui_helpers.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 ///////////////////// VARIABLES ////////////////////
 lv_obj_t * ui_Screen1;
@@ -74,6 +75,14 @@ static void ui_event_Button3(lv_event_t * e)
     if(event == LV_EVENT_CLICKED) {
         _ui_screen_change(ui_Screen1, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0);
     }
+}
+
+static uint8_t WarningRulesOK(int a, int b){
+
+	if (abs(a - b) > 100/*(((a + b)/2) * 0.1)*/)
+		return 0;
+	else
+		return 1;
 }
 
 ///////////////////// SCREENS ////////////////////
@@ -548,7 +557,7 @@ void ui_Screen2_screen_init(char weight1[], char weight2[], char weight3[], char
 
     lv_obj_set_align(ui_LblLoadStatus, LV_ALIGN_CENTER);
 
-    lv_label_set_text(ui_LblLoadStatus, "Load balanced");
+    lv_label_set_text(ui_LblLoadStatus, "Balanced weight");
 
     lv_obj_set_style_text_color(ui_LblLoadStatus, lv_color_hex(0x2B6A16), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_LblLoadStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -557,17 +566,20 @@ void ui_Screen2_screen_init(char weight1[], char weight2[], char weight3[], char
 
 void ui_ScreenX_screen_update(int data[])
 {
-	char buff_0[] = "--------";
-	char buff_1[] = "--------";
-	char buff_2[] = "--------";
-	char buff_3[] = "--------";
-	char buff_4[] = "--------";
-	char buff_5[] = "--------";
-	char buff_w0[] = "--------";
-	char buff_w1[] = "--------";
-	char buff_w2[] = "--------";
-	char buff_w3[] = "--------";
+	uint8_t flagUnbalanced = 0;
+	char buff_0[] = "tpms1";
+	char buff_1[] = "tpms2";
+	char buff_2[] = "tpms3";
+	char buff_3[] = "tpms4";
+	char buff_4[] = "tpms5";
+	char buff_5[] = "tpms6";
+	char buff_w0[] = "weight1";
+	char buff_w1[] = "weight2";
+	char buff_w2[] = "weight3";
+	char buff_w3[] = "weight4";
 
+	//*********TPMS WARNING LOGIC********************
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[0] <=35 || data[0] >= 60){
 		lv_obj_clear_flag(ui_Image13, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -576,6 +588,7 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image13, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[1] <=35 || data[1] >= 60){
 		lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -583,6 +596,7 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[2] <=35 || data[2] >= 60){
 		lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -590,6 +604,7 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[3] <=35 || data[3] >= 60){
 		lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -597,6 +612,7 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[4] <=35 || data[4] >= 60){
 		lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -604,6 +620,7 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//RG: IF THE SENSOR VALUE IS OUT OF 35 - 60
 	if(data[5] <=35 || data[5] >= 60){
 		lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -611,28 +628,88 @@ void ui_ScreenX_screen_update(int data[])
 		lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	//*********WEIGHT WARNING LOGIC********************
+	if(WarningRulesOK(data[6],data[7])){
+		lv_obj_add_flag(ui_Image14, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(ui_Image7, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_clear_flag(ui_Image14, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(ui_Image7, LV_OBJ_FLAG_HIDDEN);
+		flagUnbalanced++;
+	}
+
+	if(WarningRulesOK(data[6],data[8])){
+		lv_obj_add_flag(ui_Image14, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(ui_Image9, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_clear_flag(ui_Image14, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(ui_Image9, LV_OBJ_FLAG_HIDDEN);
+		flagUnbalanced++;
+	}
+
+	if(WarningRulesOK(data[9],data[7])){
+		lv_obj_add_flag(ui_Image10, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(ui_Image7, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_clear_flag(ui_Image10, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(ui_Image7, LV_OBJ_FLAG_HIDDEN);
+		flagUnbalanced++;
+	}
+
+	if(WarningRulesOK(data[9],data[8])){
+		lv_obj_add_flag(ui_Image10, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(ui_Image9, LV_OBJ_FLAG_HIDDEN);
+	}
+	else{
+		lv_obj_clear_flag(ui_Image10, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(ui_Image9, LV_OBJ_FLAG_HIDDEN);
+		flagUnbalanced++;
+	}
+
+	if(flagUnbalanced > 0)
+	{
+		lv_label_set_text(ui_LblLoadStatus, "Unbalanced weight");
+
+		lv_obj_set_style_text_color(ui_LblLoadStatus, lv_color_hex(0xC80815), LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_obj_set_style_text_opa(ui_LblLoadStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+	}
+	else
+	{
+	    lv_label_set_text(ui_LblLoadStatus, "Balanced weight");
+
+	    lv_obj_set_style_text_color(ui_LblLoadStatus, lv_color_hex(0x2B6A16), LV_PART_MAIN | LV_STATE_DEFAULT);
+	    lv_obj_set_style_text_opa(ui_LblLoadStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+	}
+
+	//RG: UPDATE UI LABELS
     lv_label_set_text(ui_LblTPMS1, strcat(itoa(data[0], buff_0, 10), " PSI"));
-    printf("buff_0: %s\n", buff_0);
 	lv_label_set_text(ui_LblTPMS2, strcat(itoa(data[1], buff_1, 10), " PSI"));
-	printf("buff_1: %s\n", buff_1);
 	lv_label_set_text(ui_LblTPMS3, strcat(itoa(data[2], buff_2, 10), " PSI"));
-	printf("buff_2: %s\n", buff_2);
 	lv_label_set_text(ui_LblTPMS4, strcat(itoa(data[3], buff_3, 10), " PSI"));
-	printf("buff_3: %s\n", buff_3);
 	lv_label_set_text(ui_LblTPMS5, strcat(itoa(data[4], buff_4, 10), " PSI"));
-	printf("buff_4: %s\n", buff_4);
 	lv_label_set_text(ui_LblTPMS6, strcat(itoa(data[5], buff_5, 10), " PSI"));
-	printf("buff_5: %s\n", buff_5);
 
     lv_label_set_text(ui_LblWeight1, strcat(itoa(data[6], buff_w0, 10), " LBS"));
-    printf("buff_w0: %s\n", buff_w0);
     lv_label_set_text(ui_LblWeight2, strcat(itoa(data[7], buff_w1, 10), " LBS"));
-    printf("buff_w1: %s\n", buff_w1);
     lv_label_set_text(ui_LblWeight3, strcat(itoa(data[8], buff_w2, 10), " LBS"));
-    printf("buff_w2: %s\n", buff_w2);
     lv_label_set_text(ui_LblWeight4, strcat(itoa(data[9], buff_w3, 10), " LBS"));
+
+    //RG: ONLY FOR MONITOR PURPOSES
+    printf("buff_0: %s\n", buff_0);
+	printf("buff_1: %s\n", buff_1);
+	printf("buff_2: %s\n", buff_2);
+	printf("buff_3: %s\n", buff_3);
+	printf("buff_4: %s\n", buff_4);
+	printf("buff_5: %s\n", buff_5);
+    printf("buff_w0: %s\n", buff_w0);
+    printf("buff_w1: %s\n", buff_w1);
+    printf("buff_w2: %s\n", buff_w2);
     printf("buff_w3: %s\n", buff_w3);
 }
+
 
 void ui_init(void)
 {
